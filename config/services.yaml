@@ -1,0 +1,27 @@
+services:
+  kernel:
+    class: App\Kernel
+
+  App\Controller\ControllerInterface:
+    - '@controller.test'
+
+  factory.controller:
+    class: App\Controller\ControllerFactory
+
+  factory.renderer:
+    class: App\Renderer\RendererFactory
+
+  controller.static_page_controller:
+    class: App\Controller\StaticPageController
+
+  controller.not_found_controller:
+    class: App\Controller\NotFoundController
+
+  route:
+    class: App\Core\Route
+
+  request:
+    class: App\Core\Request
+
+  response:
+    class: App\Core\Response

@@ -1,0 +1,24 @@
+{
+    "name": "graphitylabs/orkestra",
+    "type": "website",
+    "description": "A simple PHP micro-framework to develop projects that primarily serve static content",
+    "authors": [
+        {
+            "name": "Graphity Labs",
+            "email": "info@graphitylabs.nl"
+        }
+    ],
+    "require": {
+        "symfony/dependency-injection": "^5.2",
+        "symfony/config": "^5.2",
+        "symfony/yaml": "^5.2",
+        "twig/twig": "^2.0",
+        "bramus/router": "^1.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Services\\": "App"
+        },
+        "classmap": ["src/App", "public"]
+    }
+}

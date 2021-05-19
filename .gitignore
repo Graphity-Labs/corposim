@@ -1,0 +1,7 @@
+/.idea
+/.vscode
+/vendor
+/node_modules
+/templates/cache
+composer.phar
+.DS_Store
