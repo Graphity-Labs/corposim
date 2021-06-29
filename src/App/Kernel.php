@@ -63,8 +63,9 @@ class Kernel implements RequestHandlerInterface
      */
     private function configureEnvironment(string $serverName): string
     {
-        if ($serverName === 'kst.ddev.site') return 'development';
-        if ($serverName === 'kstsecurity.nl') return 'production';
+        // TODO Change the host names here to your own dev and prod host names
+        if ($serverName === 'orkestra.ddev.site') return 'development';
+        if ($serverName === 'graphitylabs.nl') return 'production';
 
         return 'invalid';
     }
