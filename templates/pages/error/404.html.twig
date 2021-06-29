@@ -1,6 +1,37 @@
-{% embed 'base.html.twig' %}
-    {% block content %}
-        <h1>404</h1>
-        <h2>{{ route }}</h2>
-    {% endblock %}
-{% endembed %}
+{# index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{# set base variables #}
+{% set page_id = '404' %}
+{% set title = 'KSTSecurity | 404 | Pagina niet gevonden' %}
+{% set description = 'We hebben de pagina waar je naar zocht niet kunnen vinden.' %}
+{% set index = false %}
+
+{# content #}
+{% block content %}
+    <main>
+        <div class="section intro">
+            {% embed 'snippets/container.html.twig' %}
+                {% block content %}
+                    {% embed 'snippets/row.html.twig' %}
+                        {% block content %}
+                            {% embed 'snippets/col.html.twig' %}
+                                {% block content %}
+                                    <h1>404 - Pagina niet gevonden</h1>
+                                    <p>We hebben de pagina waar je naar zocht niet kunnen vinden.</p>
+                                    {% include 'snippets/link.html.twig' with {
+                                        kind: 'button',
+                                        type: 'outline-primary',
+                                        href: "/",
+                                        label: 'Terug naar de homepage',
+                                        icon: 'arrow_back'
+                                    } %}
+                                {% endblock %}
+                            {% endembed %}
+                        {% endblock %}
+                    {% endembed %}
+                {% endblock %}
+            {% endembed %}
+        </div>
+    </main>
+{% endblock %}

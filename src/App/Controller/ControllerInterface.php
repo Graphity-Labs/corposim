@@ -2,29 +2,35 @@
 
 namespace App\Controller;
 
-use App\Core\Route;
-use App\Core\Request;
-use App\Core\Response;
-use App\Renderer\RendererFactory;
-use Symfony\Component\DependencyInjection\Container;
+use Twig\Environment;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 
 interface ControllerInterface
 {
     /**
-     * @param Request $request
-     * @param Container $container
-     * @param RendererFactory $renderer
-     * @param Route $route
+     * @param string $environment
+     * @param ServerRequestInterface $request
+     * @param ResponseFactoryInterface $responseFactory
+     * @param Environment $renderer
+     * @param string $template
      */
-    public function __construct(Request $request, Container $container, RendererFactory $renderer, Route $route);
+    public function __construct(
+        string $environment,
+        ServerRequestInterface $request,
+        ResponseFactoryInterface $responseFactory,
+        Environment $renderer,
+        string $template
+    );
 
     /**
-     * @return Response
+     * @return ResponseInterface
      */
-    public function get(): Response;
+    public function get(): ResponseInterface;
 
     /**
-     * @return Response
+     * @return ResponseInterface
      */
-    public function post(): Response;
+    public function post(): ResponseInterface;
 }

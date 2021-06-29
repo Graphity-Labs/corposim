@@ -2,79 +2,40 @@
 
 namespace App\Controller;
 
-use App\Core\Route;
-use App\Core\Request;
-use Bramus\Router\Router;
-use Symfony\Component\Yaml\Yaml;
-use App\Renderer\RendererFactory;
-use Symfony\Component\DependencyInjection\Container;
+use Twig\Environment;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 
 class ControllerFactory
 {
     /**
-     * @var ControllerInterface
-     */
-    private ControllerInterface $controller;
-
-    /**
-     * @param Request $request
-     * @param Container $container
-     * @param RendererFactory $renderer
-     * @param Router $router
+     * @param string $environment
+     * @param ServerRequestInterface $request
+     * @param ResponseFactoryInterface $responseFactory
+     * @param array $routes
+     * @param Environment $renderer
      * @return ControllerInterface
      */
     public function create(
-        Request $request,
-        Container $container,
-        RendererFactory $renderer,
-        Router $router
+        string $environment,
+        ServerRequestInterface $request,
+        ResponseFactoryInterface $responseFactory,
+        array $routes,
+        Environment $renderer
     ): ControllerInterface {
-        $routes = $this->retrieveRoutes();
-        $route = $this->configureRoute($router);
-        $uri = $route->getUri();
+        $uri = $request->getUri()->getPath() !== '/'
+            ? rtrim($request->getUri()->getPath(), '/\\')
+            : $request->getUri()->getPath();
 
-        if ($this->routeFound($uri, $routes) === true) {
-            $controller = $routes[$uri]['class'];
-
-            $router->get($uri, function () use ($request, $container, $renderer, $uri, $route, $controller) {
-                $this->controller = new $controller($request, $container, $renderer, $route);
-            });
-        } else {
-            $this->controller = new NotFoundController($request, $container, $renderer, $route);
+        // handle 404
+        if (!isset($routes[$uri])) {
+            $template = 'pages/error/404.html.twig';
+            return new NotFoundController($environment, $request, $responseFactory, $renderer, $template);
         }
 
-        $router->run();
+        $controller = $routes[$uri]['class'];
+        $template = $routes[$uri]['template'];
 
-        return $this->controller;
-    }
-
-    /**
-     * @param Router $router
-     * @return Route
-     */
-    private function configureRoute(Router $router): Route
-    {
-        $route = new Route();
-        $route->setUri($router->getCurrentUri());
-
-        return $route;
-    }
-
-    /**
-     * @return array
-     */
-    private function retrieveRoutes(): array
-    {
-        return Yaml::parseFile(__DIR__ . '/../../../config/routes.yaml');
-    }
-
-    /**
-     * @param string $uri
-     * @param array $routes
-     * @return bool
-     */
-    private function routeFound(string $uri, array $routes): bool
-    {
-        return array_key_exists($uri, $routes);
+        return new $controller($environment, $request, $responseFactory, $renderer, $template);
     }
 }

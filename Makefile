@@ -10,6 +10,9 @@ install:
 watch:
 	@node_modules/webpack/bin/webpack.js --mode='production' --watch
 
+sass-watch:
+	@node_modules/sass/sass.js --watch --style compressed src/Style/main.scss public/main.min.css
+
 build:
 	@node_modules/webpack/bin/webpack.js --mode 'production'
 

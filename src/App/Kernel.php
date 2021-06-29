@@ -3,59 +3,70 @@
 namespace App;
 
 use Exception;
-use App\Core\Request;
-use App\Core\Response;
+use Twig\Environment;
 use Bramus\Router\Router;
+use Symfony\Component\Yaml\Yaml;
 use App\Renderer\RendererFactory;
 use App\Controller\ControllerFactory;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class Kernel
+class Kernel implements RequestHandlerInterface
 {
     /**
-     * @var string
-     */
-    private string $environment;
-
-    /**
-     * @param string $environment
-     */
-    public function __construct(string $environment)
-    {
-        $this->environment = $environment;
-    }
-
-    /**
-     * @return Response
+     * @param ServerRequestInterface $request
+     * @return ResponseInterface
      * @throws Exception
      */
-    public function handle(): Response
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $environment = $this->configureEnvironment($_SERVER['SERVER_NAME']);
+        $router = $this->configureRouter();
+        $routes = $this->retrieveRoutes();
+        $renderer = $this->configureRenderer();
+
+        $responseFactory = new Psr17Factory();
         $controllerFactory = new ControllerFactory();
 
-        $request = new Request($_REQUEST);
-        $container = $this->configureContainer();
-        $renderer = new RendererFactory();
-        $router = $this->configureRouter();
+        $controller = $controllerFactory->create($environment, $request, $responseFactory, $routes, $renderer);
 
-        $controller = $controllerFactory->create($request, $container, $renderer, $router);
+        $response = null;
 
-        return $controller->get();
+        if ($request->getMethod() === 'GET') {
+            $router->get(
+                $request->getUri()->getPath(),
+                function () use ($controller, &$response) {
+                    $response = $controller->get();
+                }
+            );
+        }
+
+        if ($request->getMethod() === 'POST') {
+            $router->post(
+                $request->getUri()->getPath(),
+                function () use ($controller, &$response) {
+                    $response = $controller->post();
+                }
+            );
+        }
+
+        $router->run();
+
+        return $response;
     }
 
     /**
-     * @return ContainerBuilder
-     * @throws Exception
+     * @param string $serverName
+     * @return string
      */
-    private function configureContainer(): ContainerBuilder
+    private function configureEnvironment(string $serverName): string
     {
-        $containerBuilder = new ContainerBuilder();
-        $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__ . '/../../config'));
-        $loader->load('services.yaml');
+        if ($serverName === 'kst.ddev.site') return 'development';
+        if ($serverName === 'kstsecurity.nl') return 'production';
 
-        return $containerBuilder;
+        return 'invalid';
     }
 
     /**
@@ -67,5 +78,23 @@ class Kernel
         $router->setBasePath('/');
 
         return $router;
+    }
+
+    /**
+     * @return array
+     */
+    private function retrieveRoutes(): array
+    {
+        return Yaml::parseFile(__DIR__ . '/Config/routes.yaml');
+    }
+
+    /**
+     * @return Environment
+     */
+    private function configureRenderer(): Environment
+    {
+        $rendererFactory = new RendererFactory();
+
+        return $rendererFactory->create();
     }
 }

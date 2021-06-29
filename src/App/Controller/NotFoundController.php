@@ -2,70 +2,85 @@
 
 namespace App\Controller;
 
-use App\Core\Route;
-use App\Core\Request;
-use App\Core\Response;
+use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
 use Twig\Error\RuntimeError;
-use App\Renderer\RendererFactory;
-use Symfony\Component\DependencyInjection\Container;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 
 class NotFoundController extends BaseController implements ControllerInterface
 {
     /**
-     * @var Request
+     * @var string
      */
-    private Request $request;
+    private string $environment;
 
     /**
-     * @var Container
+     * @var ServerRequestInterface
      */
-    private Container $container;
+    private ServerRequestInterface $request;
 
     /**
-     * @var RendererFactory
+     * @var ResponseFactoryInterface
      */
-    private RendererFactory $rendererFactory;
+    private ResponseFactoryInterface $responseFactory;
 
     /**
-     * @var Route
+     * @var Environment
      */
-    private Route $route;
+    private Environment $renderer;
 
     /**
-     * @param Request $request
-     * @param Container $container
-     * @param RendererFactory $renderer
-     * @param Route $route
+     * @var string
      */
-    public function __construct(Request $request, Container $container, RendererFactory $renderer, Route $route)
-    {
+    private string $template;
+
+    /**
+     * @param string $environment
+     * @param ServerRequestInterface $request
+     * @param ResponseFactoryInterface $responseFactory
+     * @param Environment $renderer
+     * @param string $template
+     */
+    public function __construct(
+        string $environment,
+        ServerRequestInterface $request,
+        ResponseFactoryInterface $responseFactory,
+        Environment $renderer,
+        string $template
+    ) {
+        $this->environment = $environment;
         $this->request = $request;
-        $this->container = $container;
-        $this->rendererFactory = $renderer;
-        $this->route = $route;
+        $this->responseFactory = $responseFactory;
+        $this->renderer = $renderer;
+        $this->template = $template;
     }
 
     /**
-     * @return Response
+     * @return ResponseInterface
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
      */
-    public function get(): Response
+    public function get(): ResponseInterface
     {
-        $content = $this->rendererFactory->create()->render('pages/error/404.html.twig', [
-            'route' => $this->route->getUri()
-        ]);
-        return new Response(200, $content);
+        $content = $this->renderer->render('pages/error/404.html.twig');
+
+        $responseBody = $this->responseFactory->createStream($content);
+
+        return $this->responseFactory->createResponse()->withBody($responseBody);
     }
 
     /**
-     * @return Response
+     * @return ResponseInterface
      */
-    public function post(): Response
+    public function post(): ResponseInterface
     {
-        return new Response(405);
+        $responseFactory = new Psr17Factory();
+
+        return $responseFactory->createResponse(405);
     }
 }
