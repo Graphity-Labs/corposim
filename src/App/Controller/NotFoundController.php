@@ -71,7 +71,7 @@ class NotFoundController extends BaseController implements ControllerInterface
 
         $responseBody = $this->responseFactory->createStream($content);
 
-        return $this->responseFactory->createResponse()->withBody($responseBody);
+        return $this->responseFactory->createResponse(404)->withBody($responseBody);
     }
 
     /**
