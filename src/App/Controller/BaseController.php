@@ -19,7 +19,7 @@ class BaseController
         $requestFactory = new Psr17Factory();
         $queryString = $requestFactory->createStreamFromFile('php://input');
 
-        if (!isset($queryString) || empty($queryString) || $queryString === '') {
+        if (empty($queryString)) {
             return null;
         }
 
